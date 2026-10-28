@@ -1,0 +1,5 @@
+unique_id,state,district,disease,cases,deaths,outbreak_start_date,reporting_date,status,comments
+KL/KSD/2024/101,Kerala,Kasaragod,Dengue,25,0,2024-08-01,2024-08-03,Under Control,Sample dengue outbreak
+KA/BLR/2024/102,Karnataka,Bengaluru,Food Poisoning,40,0,2024-08-05,2024-08-06,Under Control,Sample food poisoning outbreak
+KL/KNR/2024/103,Kerala,Kannur,Leptospirosis,18,1,2024-08-10,2024-08-12,Under Surveillance,Sample leptospirosis outbreak
+KL/KSD/2024/104,Kerala,Kasaragod,Dengue,-15,0,2024-08-15,2024-08-16,Under Control,Invalid negative case count
