@@ -9,6 +9,7 @@ from mysql.connector import IntegrityError
 
 from app.ingestion.csv_reader import normalize_outbreak_csv_records
 from app.ingestion.outbreak_parser import parse_outbreaks_with_errors
+from app.repositories.data_quality_repository import save_data_quality_issues
 from app.repositories.ingestion_audit_repository import (
     complete_ingestion_run,
     create_ingestion_run,
@@ -45,6 +46,21 @@ def ingest_csv_bytes(
 
         valid_outbreaks, rejected_records = parse_outbreaks_with_errors(records)
         save_rejected_records(run_id, rejected_records)
+        quality_issues = [
+            {
+                "source_unique_id": outbreak.unique_id,
+                "issue_type": "reporting_date_before_outbreak_start",
+                "severity": "warning",
+                "message": outbreak.data_quality_note,
+                "original_value": {
+                    "outbreak_start_date": outbreak.outbreak_start_date,
+                    "reporting_date": outbreak.reporting_date,
+                },
+            }
+            for outbreak in valid_outbreaks
+            if outbreak.data_quality_note
+        ]
+        save_data_quality_issues(run_id, quality_issues)
 
         import_errors = []
         accepted = duplicates = failed = 0
