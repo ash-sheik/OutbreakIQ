@@ -20,7 +20,7 @@ Audited against `OutbreakIQ_PRD_and_Design_Summary.md` on 29 October 2026.
 | --- | --- | --- |
 | `01_ingestion_audit` | PDF extraction, source documents, ingestion-run tracking, quarantine | Implemented; focused automated tests remain planned |
 | `02_database_lineage` | Source, run, and data-quality tables with foreign keys | Implemented; focused database-constraint tests remain planned |
-| `03_trend_analysis` | Historical aggregations and baseline comparisons | Pending |
+| `03_trend_analysis` | Historical aggregations and baseline comparisons | Implemented; independent calculation tests remain planned |
 | `04_anomaly_alerts` | Explainable alert rules, persistence, evidence links | Pending |
 | `05_api_query` | Filters, pagination, date ranges, analytical endpoints, consistent errors | Pending |
 | `06_investigation_briefs` | Gemini evidence-grounded briefs and retry status | Pending |

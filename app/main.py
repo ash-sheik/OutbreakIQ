@@ -1,8 +1,9 @@
 
 import csv
 import io
+from datetime import date
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query
 
 from app.models.outbreak import Outbreak
 
@@ -32,6 +33,8 @@ from app.ingestion.mysql_importer import (
 )
 from app.ingestion.import_report import save_import_report
 from app.ingestion.pipeline import ingest_csv_bytes
+from app.analytics.trends import calculate_trends
+from app.models.trend import TrendFilters
 from app.repositories.ingestion_audit_repository import get_ingestion_run
 
 
@@ -50,6 +53,34 @@ def health_check():
     return {
         "status": "healthy",
         "service": "OutbreakIQ API"
+    }
+
+
+@app.get("/analytics/trends")
+def get_trends(
+    disease: str | None = None,
+    state: str | None = None,
+    district: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    lookback_periods: int = Query(default=8, ge=1, le=52),
+    minimum_baseline_periods: int = Query(default=4, ge=1, le=52),
+):
+    """Return weekly observations with an explainable trailing baseline."""
+    filters = TrendFilters(
+        disease=disease,
+        state=state,
+        district=district,
+        date_from=date_from,
+        date_to=date_to,
+        lookback_periods=lookback_periods,
+        minimum_baseline_periods=minimum_baseline_periods,
+    )
+    trend_points = calculate_trends(filters)
+    return {
+        "filters": filters.model_dump(mode="json"),
+        "total_points": len(trend_points),
+        "points": trend_points,
     }
 
 

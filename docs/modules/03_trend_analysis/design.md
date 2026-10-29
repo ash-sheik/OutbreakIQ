@@ -1,5 +1,5 @@
 # Trend analysis design
 
-Create an analytics service that queries canonical records with reporting dates, groups them by ISO reporting week, and returns deterministic summaries. Define a baseline configuration with lookback-window size and minimum comparable periods.
+The analytics service queries canonical records with reporting dates, groups them by ISO reporting week, and returns deterministic summaries. Its default baseline is the preceding eight observed weeks for the same disease, state, and district; it requires at least four prior weeks before producing a baseline.
 
-Trend results initially remain request-time calculations. Anomaly detection receives a structured trend result containing observed value, baseline mean, supporting record IDs, and limitations.
+Trend results remain request-time calculations. They expose the supporting weekly observations and limitations, including excluded records with missing reporting dates. Anomaly detection receives the observed value, baseline mean, and evidence.

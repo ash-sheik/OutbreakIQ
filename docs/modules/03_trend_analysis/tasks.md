@@ -1,8 +1,8 @@
 # Trend analysis tasks
 
-- [ ] Define Pydantic schemas for trend filters, points, and baseline evidence.
-- [ ] Implement repository aggregation queries.
-- [ ] Implement baseline and insufficient-data handling.
-- [ ] Add `GET /analytics/trends`.
+- [x] Define Pydantic schemas for trend filters, points, and baseline evidence.
+- [x] Implement repository aggregation queries.
+- [x] Implement baseline and insufficient-data handling.
+- [x] Add `GET /analytics/trends`.
 - [ ] Add independently checkable calculation tests.
-- [ ] Document the baseline definition and limitations.
+- [x] Document the baseline definition and limitations.
