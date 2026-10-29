@@ -2,7 +2,7 @@
 import csv
 import io
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, UploadFile, File
 
 from app.models.outbreak import Outbreak
 
@@ -31,6 +31,8 @@ from app.ingestion.mysql_importer import (
     import_validated_outbreaks
 )
 from app.ingestion.import_report import save_import_report
+from app.ingestion.pipeline import ingest_csv_bytes
+from app.repositories.ingestion_audit_repository import get_ingestion_run
 
 
 
@@ -49,6 +51,48 @@ def health_check():
         "status": "healthy",
         "service": "OutbreakIQ API"
     }
+
+
+@app.post("/ingestion-runs/csv", status_code=201)
+async def start_csv_ingestion_run(
+    file: UploadFile = File(...),
+    source_url: str | None = None,
+    reporting_period: str | None = None,
+):
+    """Upload CSV data and retain source and run audit history."""
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only CSV files are allowed",
+        )
+
+    try:
+        result = ingest_csv_bytes(
+            content=await file.read(),
+            filename=file.filename,
+            source_url=source_url,
+            reporting_period=reporting_period,
+        )
+    except UnicodeDecodeError as error:
+        raise HTTPException(
+            status_code=400,
+            detail="CSV file must use UTF-8 encoding",
+        ) from error
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    finally:
+        await file.close()
+
+    return result
+
+
+@app.get("/ingestion-runs/{run_id}")
+def get_csv_ingestion_run(run_id: int):
+    """Retrieve one completed or failed ingestion run."""
+    ingestion_run = get_ingestion_run(run_id)
+    if ingestion_run is None:
+        raise HTTPException(status_code=404, detail="Ingestion run not found")
+    return ingestion_run
 
 
 
@@ -81,9 +125,6 @@ def list_outbreaks():
         "total_records": len(outbreaks),
         "outbreaks": outbreaks
     }
-
-
-from fastapi import FastAPI, HTTPException, UploadFile, File
 
 
 @app.get("/outbreaks/{unique_id:path}")

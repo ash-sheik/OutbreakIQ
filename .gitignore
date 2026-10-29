@@ -6,6 +6,10 @@
 # Python cache
 __pycache__/
 *.pyc
+.pytest_cache/
+
+# Generated operational audit data
+data/processed/import_reports.jsonl
 
 # Virtual environments
 venv/

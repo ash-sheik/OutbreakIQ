@@ -43,6 +43,7 @@ def parse_outbreaks_with_errors(records: list[dict]):
             invalid_records.append({
                 "record_index": index,
                 "unique_id": record.get("unique_id"),
+                "original_record": record.copy(),
                 "errors": error.errors(include_context=False)
             })
 

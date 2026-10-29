@@ -18,7 +18,7 @@ Audited against `OutbreakIQ_PRD_and_Design_Summary.md` on 29 October 2026.
 
 | Module | PRD coverage | Status |
 | --- | --- | --- |
-| `01_ingestion_audit` | PDF extraction, source documents, ingestion-run tracking, quarantine | Pending |
+| `01_ingestion_audit` | PDF extraction, source documents, ingestion-run tracking, quarantine | Implemented; focused automated tests remain planned |
 | `02_database_lineage` | Source, run, and data-quality tables with foreign keys | Pending |
 | `03_trend_analysis` | Historical aggregations and baseline comparisons | Pending |
 | `04_anomaly_alerts` | Explainable alert rules, persistence, evidence links | Pending |
