@@ -34,6 +34,13 @@ from app.ingestion.mysql_importer import (
 from app.ingestion.import_report import save_import_report
 from app.ingestion.pipeline import ingest_csv_bytes
 from app.analytics.trends import calculate_trends
+
+from app.analytics.anomaly_rules import AnomalyRule
+from app.analytics.anomaly_service import run_anomaly_analysis
+from app.repositories.anomaly_alert_repository import (
+    list_alerts,
+    get_alert_by_id,
+)
 from app.models.trend import TrendFilters
 from app.repositories.ingestion_audit_repository import get_ingestion_run
 
@@ -355,3 +362,66 @@ async def upload_and_import_outbreaks(file: UploadFile = File(...)):
         "validation_errors": invalid_records,
         "import_report": report,
     }
+
+
+@app.post("/analysis/run")
+def run_analysis(
+    filters: TrendFilters,
+    percentage_change_threshold: float = Query(
+        default=50.0,
+        ge=0,
+    ),
+):
+    """Run explainable anomaly detection for the selected filters."""
+    rule = AnomalyRule(
+        minimum_history_periods=filters.minimum_baseline_periods,
+        percentage_change_threshold=percentage_change_threshold,
+    )
+
+    try:
+        return run_anomaly_analysis(filters=filters, rule=rule)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        ) from error
+
+
+@app.get("/alerts")
+def get_alerts(
+    disease: str | None = None,
+    state: str | None = None,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+):
+    """List alerts with optional filters and pagination."""
+    return {
+        "alerts": list_alerts(
+            disease=disease,
+            state=state,
+            limit=limit,
+            offset=offset,
+        ),
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+@app.get("/alerts/{alert_id}")
+def get_alert(alert_id: int):
+    """Retrieve one alert with its supporting evidence."""
+    if alert_id < 1:
+        raise HTTPException(
+            status_code=422,
+            detail="alert_id must be a positive integer",
+        )
+
+    alert = get_alert_by_id(alert_id)
+
+    if alert is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Alert not found",
+        )
+
+    return alert

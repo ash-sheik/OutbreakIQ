@@ -209,3 +209,112 @@ def test_get_outbreak_by_id_not_found():
     mock_get.assert_called_once_with(
         "TEST/NOTFOUND/999"
     )
+
+
+def test_run_analysis_success():
+    mock_result = {
+        "rule_id": "case_increase_v1",
+        "rule_version": 1,
+        "trend_points_evaluated": 10,
+        "alerts_found": 1,
+        "alerts": [{"alert_id": 42}],
+        "message": (
+            "Alerts are analytical findings requiring verification; "
+            "they do not confirm an outbreak."
+        ),
+    }
+
+    with patch(
+        "app.main.run_anomaly_analysis",
+        return_value=mock_result,
+    ) as mock_run:
+        response = client.post(
+            "/analysis/run",
+            json={"minimum_baseline_periods": 4},
+        )
+
+    assert response.status_code == 200
+    assert response.json() == mock_result
+    mock_run.assert_called_once()
+
+
+def test_run_analysis_rejects_negative_threshold():
+    response = client.post(
+        "/analysis/run?percentage_change_threshold=-1",
+        json={"minimum_baseline_periods": 4},
+    )
+
+    assert response.status_code == 422
+
+
+def test_list_alerts_success():
+    mock_alerts = [
+        {"alert_id": 42, "disease": "Dengue", "state": "Kerala"}
+    ]
+
+    with patch(
+        "app.main.list_alerts",
+        return_value=mock_alerts,
+    ) as mock_list:
+        response = client.get(
+            "/alerts",
+            params={
+                "disease": "Dengue",
+                "state": "Kerala",
+                "limit": 20,
+                "offset": 5,
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json()["alerts"] == mock_alerts
+    assert response.json()["limit"] == 20
+    assert response.json()["offset"] == 5
+    mock_list.assert_called_once_with(
+        disease="Dengue",
+        state="Kerala",
+        limit=20,
+        offset=5,
+    )
+
+
+def test_list_alerts_rejects_invalid_pagination():
+    response = client.get("/alerts?limit=0")
+
+    assert response.status_code == 422
+
+
+def test_get_alert_success():
+    mock_alert = {
+        "alert_id": 42,
+        "disease": "Dengue",
+        "evidence": [{"evidence_id": 1}],
+    }
+
+    with patch(
+        "app.main.get_alert_by_id",
+        return_value=mock_alert,
+    ) as mock_get:
+        response = client.get("/alerts/42")
+
+    assert response.status_code == 200
+    assert response.json() == mock_alert
+    mock_get.assert_called_once_with(42)
+
+
+def test_get_alert_not_found():
+    with patch(
+        "app.main.get_alert_by_id",
+        return_value=None,
+    ) as mock_get:
+        response = client.get("/alerts/999")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Alert not found"}
+    mock_get.assert_called_once_with(999)
+
+
+def test_get_alert_rejects_non_positive_id():
+    response = client.get("/alerts/0")
+
+    assert response.status_code == 422
